@@ -13,8 +13,11 @@ reviewed. The evidence may be a scanned PDF, PNG, JPEG or TIFF document. The
 browser sends the file to its trusted backend; it never hashes, signs, stores
 or publishes the authoritative record by itself.
 
-The backend stores the binary in confidential storage and calculates two
-equivalent integrity representations from the exact bytes:
+The backend stores the binary in confidential storage. Canonical business
+metadata represents it as a Schema.org `MediaObject` encoding of the
+`EducationalOccupationalCredential`, with a protected `contentUrl`, media
+type, size and CID identifier. The backend calculates two equivalent integrity
+representations from the exact bytes:
 
 - the OpenID Identity Assurance external-attachment digest, with negotiated
   algorithm `sha3-384` and the 48-byte digest encoded as base64;
@@ -28,12 +31,11 @@ the document, URL, access token, employee name, qualification identifier or
 issuer legal identifier.
 
 Schema.org `EducationalOccupationalCredential` flat claims describe the
-qualification. OpenID Identity Assurance `verification.evidence` describes
-what was examined and how. In an interoperable export, the scan is a
-`document` evidence attachment. The standard external attachment carries its
-protected `url`, `digest.alg` and base64 `digest.value`; the CID remains
-storage metadata or a namespaced extension unless an adopted profile defines
-it explicitly.
+qualification and its `MediaObject` encoding is the canonical reference to the
+scan. OpenID Identity Assurance `verification.evidence` describes what was
+examined and how. In that exchange projection, the same scan becomes a
+`document` evidence attachment carrying its protected `url`, `digest.alg` and
+base64 `digest.value`. The projection does not introduce a second stored file.
 
 ## Issuer discovery and request delivery
 
@@ -128,4 +130,3 @@ directory adapter, signed outbox transport, confidential artifact service,
 issuer-side authoritative readback, credential verification or issuance,
 ledger adapter, retry and dead-letter handling, and real local plus Test
 Network end-to-end proof.
-
