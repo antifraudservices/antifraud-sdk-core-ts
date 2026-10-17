@@ -37,6 +37,33 @@ No secrets, tenant configuration, trust anchors, personal data, signing keys, or
 
 The browser and a generic backend for frontend are untrusted for credential signing. Only the configured credential provider may sign after an authoritative readback and authorization check.
 
+## Workforce group authorization
+
+An employee does not receive a separate Consent merely by joining an
+operational group. Orchestration must receive and keep distinct:
+
+1. the employee's active assignment and active membership in the exact group;
+2. the controller-managed authorization for that group and its exact
+   capabilities;
+3. when the use case requires it, a separate authorization from the subject or
+   lawful representative.
+
+Adding or removing one employee changes membership only. It must not recreate
+or revoke the group authorization for the remaining members. Invitation,
+acceptance, department or group reassignment, suspension, and reactivation are
+separate assignment events that applications notify through Communication.
+Those notifications are not authorization records.
+
+The same orchestration contract can serve education, insurance, human health,
+animal care, or other domains. Product applications select their own group
+purposes and subject-authorization rules; this package must not embed them.
+
+For employee qualification evidence, orchestration keeps organization
+resolution, employer attestation, and source-issued credential proof as
+separate states. An awarding organization is selected by legal identifier and
+jurisdiction. If no source credential exists, the employer may sign its own
+attestation but must not be represented as the awarding organization's issuer.
+
 ## Dependency direction
 
 ```text
@@ -56,4 +83,3 @@ Implementation begins with executable contract tests and proceeds in dependency 
 ## License
 
 Apache-2.0.
-
