@@ -64,6 +64,13 @@ separate states. An awarding organization is selected by legal identifier and
 jurisdiction. If no source credential exists, the employer may sign its own
 attestation but must not be represented as the awarding organization's issuer.
 
+The implemented qualification-evidence controller records the employer's proof
+through a trusted port, resolves the claimed issuer by legal identifier and
+jurisdiction, anchors only opaque continuity, and queues a tenant-to-tenant
+confirmation request. See [Qualification evidence confirmation prototype](docs/QUALIFICATION_EVIDENCE_CONFIRMATION.md)
+for attachment, issuer notification, ledger recovery and credential-rendering
+boundaries.
+
 ## Dependency direction
 
 ```text
