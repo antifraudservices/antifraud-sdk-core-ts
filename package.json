@@ -1,6 +1,6 @@
 {
   "name": "antifraud-sdk-core-ts",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Runtime-neutral orchestration for identity verification and provider-issued credentials",
   "type": "module",
   "main": "./dist/index.js",
@@ -34,6 +34,6 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "antifraud-data-utils-ts": "0.1.3"
+    "antifraud-data-utils-ts": "0.1.4"
   }
 }

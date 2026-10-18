@@ -1,5 +1,6 @@
 export * from './openid4vp.js'
 export * from './credential-issuance-controller.js'
+export * from './document-delivery-controller.js'
 export * from './presentation-controller.js'
 export * from './presentation-session.js'
 export * from './qualification-evidence-controller.js'

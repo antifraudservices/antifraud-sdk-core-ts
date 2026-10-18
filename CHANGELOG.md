@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.1.3 - 2026-10-18
+
+- Consume `antifraud-data-utils-ts@0.1.4` and orchestrate Schema.org
+  confidential-document delivery through canonical inline or protected-link
+  DIDComm attachments.
+- Preserve trusted sender and recipient bindings, idempotent operation replay,
+  exact byte-count agreement and separate delivery, read and signature states.
+
 ## 0.1.2 - 2026-10-18
 
 - Replace binary qualification-issuer lookup with explicit
