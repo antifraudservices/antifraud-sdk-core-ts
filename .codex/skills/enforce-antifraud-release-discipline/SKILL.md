@@ -70,6 +70,13 @@ These are hard release gates, not recommendations.
   invariants.
 - Mocks may isolate units but never replace the real boundary being claimed.
 - Use Node.js 24 for installs, builds, tests, packing and releases.
+- Protect the developer workstation. Run heavy gates sequentially by default.
+  Never run concurrent Next.js production builds, Playwright/browser suites,
+  Docker or Fabric networks, package installs, image builds or full repository
+  matrices. Parallel execution is allowed only for read-only inspection or
+  demonstrably light, isolated unit tests with bounded workers and no shared
+  ports, databases, caches or generated outputs. Stop parallel work if memory,
+  CPU, thermals or responsiveness degrade.
 - Preserve unrelated work. End each functional branch with changelog, pushed
   branch, explicit merge to `main`, pushed matching refs and a clean worktree;
   apply package versions only in the later cumulative release closure.
