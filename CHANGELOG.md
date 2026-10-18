@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.1 - 2026-10-17
+
+- Add runtime-neutral authoritative credential issuance orchestration using
+  canonical data-utils contracts, opaque polling continuity and terminal-state
+  enforcement.
+
 - Add runtime-neutral employer qualification-evidence orchestration, issuer
   discovery, privacy-minimized confirmation requests, issuer-owned decisions
   and reverse decision notifications.
