@@ -1,6 +1,7 @@
 // Flow contract: 1. A trusted backend supplies verified controller, employer, employee and group-authorization references. 2. The employer records its own evidence attestation. 3. The claimed issuer is resolved by legal identifier and jurisdiction through an authoritative directory. 4. A privacy-minimized ledger anchor is recorded. 5. A signed tenant-to-tenant confirmation request is queued through an outbox. 6. Only the resolved issuer tenant may confirm, reject or revoke its own proof and a result notice is queued to the employer. Authorization invariant: the controller, employer, employee and issuer identities come from trusted server context, never browser-authored claims. Persistence invariant: raw evidence, personal claims and signed credentials remain off ledger; the core stores only opaque continuity and delegates durable writes to ports.
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { SyntheticConfidentialDocumentFixture } from 'antifraud-data-utils-ts'
 
 import {
   applyQualificationIssuerDecision,
@@ -23,7 +24,7 @@ const request = Object.freeze({
   }),
   evidence: Object.freeze({
     reference: 'urn:evidence-document:opaque',
-    contentId: 'zKYrhS8ZkySGc9pjHe8KE4bo1RjKKbjaxatf3zM16DD2hLGPvK3bqbSGvpNYA2qafoUeBYT',
+    contentId: SyntheticConfidentialDocumentFixture.attachment.contentId,
     mediaType: 'application/pdf',
     fileName: 'degree.pdf',
   }),
@@ -35,10 +36,13 @@ test('records employer evidence and queues an issuer confirmation request', asyn
   const controller = createQualificationEvidenceController({
     issuerDirectory: {
       resolve: async query => ({
-        ...query,
-        issuerTenantReference: 'urn:tenant:issuer-opaque',
-        issuerOrganizationReference: 'urn:organization:issuer-opaque',
-        confirmationServiceReference: 'urn:service:issuer-confirmation-opaque',
+        kind: 'participant-resolved',
+        issuer: {
+          ...query,
+          issuerTenantReference: 'urn:tenant:issuer-opaque',
+          issuerOrganizationReference: 'urn:organization:issuer-opaque',
+          confirmationServiceReference: 'urn:service:issuer-confirmation-opaque',
+        },
       }),
     },
     evidenceRecorder: {
@@ -85,12 +89,80 @@ test('records employer evidence and queues an issuer confirmation request', asyn
     qualificationClaimReference: 'urn:qualification-claim:opaque',
     employerOrganizationReference: 'urn:organization:employer-opaque',
     claimedIssuerOrganizationReference: 'urn:organization:issuer-opaque',
-    evidenceContentId: 'zKYrhS8ZkySGc9pjHe8KE4bo1RjKKbjaxatf3zM16DD2hLGPvK3bqbSGvpNYA2qafoUeBYT',
+    evidenceContentId: SyntheticConfidentialDocumentFixture.attachment.contentId,
     evidenceMediaType: 'application/pdf',
     createdAt: '2026-10-17T20:00:00.000Z',
   })
   assert.equal(JSON.stringify(messages[0]).includes('issuer-legal-id'), false)
   assert.equal(JSON.stringify(messages[0]).includes('degree.pdf'), false)
+})
+
+test('records a known non-participant without fabricating tenant authority or queueing delivery', async () => {
+  const anchors = []
+  let queued = 0
+  const controller = createQualificationEvidenceController({
+    issuerDirectory: {
+      resolve: async () => ({
+        kind: 'identity-resolved',
+        issuerOrganizationReference: 'urn:organization:known-issuer-opaque',
+      }),
+    },
+    evidenceRecorder: {
+      recordEmployerAttestation: async () => ({
+        evidenceReference: 'urn:evidence:awaiting-onboarding',
+        employerProofReference: 'urn:proof:employer-awaiting-onboarding',
+        anchor: {
+          anchorReference: 'urn:ledger-anchor:awaiting-onboarding',
+          contentHash: 'urn:sha3-384:awaiting-onboarding',
+        },
+      }),
+    },
+    ledger: { recordAnchor: async anchor => { anchors.push(anchor) } },
+    outbox: {
+      queue: async () => {
+        queued += 1
+        throw new Error('The outbox must not run for a non-participating issuer')
+      },
+    },
+    now: () => '2026-10-18T07:00:00.000Z',
+  })
+
+  const result = await controller.submit(request)
+
+  assert.deepEqual(result, {
+    phase: 'awaiting-issuer-onboarding',
+    evidenceReference: 'urn:evidence:awaiting-onboarding',
+    employerProofReference: 'urn:proof:employer-awaiting-onboarding',
+    ledgerAnchorReference: 'urn:ledger-anchor:awaiting-onboarding',
+    issuerOrganizationReference: 'urn:organization:known-issuer-opaque',
+  })
+  assert.equal(queued, 0)
+  assert.deepEqual(anchors, [{
+    anchorReference: 'urn:ledger-anchor:awaiting-onboarding',
+    evidenceReference: 'urn:evidence:awaiting-onboarding',
+    contentHash: 'urn:sha3-384:awaiting-onboarding',
+    issuerOrganizationReference: 'urn:organization:known-issuer-opaque',
+    lifecycleStatus: 'awaiting-issuer-onboarding',
+  }])
+})
+
+test('does not record evidence when the issuer identity is not resolved', async () => {
+  let records = 0
+  const controller = createQualificationEvidenceController({
+    issuerDirectory: { resolve: async () => ({kind: 'not-resolved'}) },
+    evidenceRecorder: {
+      recordEmployerAttestation: async () => {
+        records += 1
+        throw new Error('Evidence must not be recorded for an unresolved issuer')
+      },
+    },
+    ledger: { recordAnchor: async () => undefined },
+    outbox: { queue: async () => ({messageReference: 'unreachable'}) },
+    now: () => '2026-10-18T07:00:00.000Z',
+  })
+
+  assert.deepEqual(await controller.submit(request), {phase: 'issuer-not-resolved'})
+  assert.equal(records, 0)
 })
 
 test('rejects an issuer decision from a different tenant', () => {

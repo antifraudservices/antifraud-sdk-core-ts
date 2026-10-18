@@ -1,5 +1,7 @@
 // Copyright 2026 Antifraud Services Inc. under the Apache License, Version 2.0.
 
+import { assertSha3_384EvidenceContentId } from 'antifraud-data-utils-ts'
+
 export type QualificationIssuerQuery = Readonly<{
   legalIdentifier: string
   jurisdiction: string
@@ -10,6 +12,19 @@ export type ResolvedQualificationIssuer = QualificationIssuerQuery & Readonly<{
   issuerOrganizationReference: string
   confirmationServiceReference: string
 }>
+
+export type QualificationIssuerResolution =
+  | Readonly<{
+      kind: 'participant-resolved'
+      issuer: ResolvedQualificationIssuer
+    }>
+  | Readonly<{
+      kind: 'identity-resolved'
+      issuerOrganizationReference: string
+    }>
+  | Readonly<{
+      kind: 'not-resolved'
+    }>
 
 export type QualificationEvidenceRequest = Readonly<{
   trustedContext: Readonly<{
@@ -46,7 +61,7 @@ export type QualificationConfirmationRequestMessage = Readonly<{
 
 export type QualificationEvidenceControllerPorts = Readonly<{
   issuerDirectory: Readonly<{
-    resolve(query: QualificationIssuerQuery): Promise<ResolvedQualificationIssuer | null>
+    resolve(query: QualificationIssuerQuery): Promise<QualificationIssuerResolution>
   }>
   evidenceRecorder: Readonly<{
     recordEmployerAttestation(request: QualificationEvidenceRequest): Promise<Readonly<{
@@ -63,9 +78,16 @@ export type QualificationEvidenceControllerPorts = Readonly<{
       anchorReference: string
       evidenceReference: string
       contentHash: string
-      issuerTenantReference: string
-      lifecycleStatus: 'awaiting-issuer-confirmation'
-    }>): Promise<void>
+      issuerOrganizationReference: string
+    }> & (
+      | Readonly<{
+          issuerTenantReference: string
+          lifecycleStatus: 'awaiting-issuer-confirmation'
+        }>
+      | Readonly<{
+          lifecycleStatus: 'awaiting-issuer-onboarding'
+        }>
+    )): Promise<void>
   }>
   outbox: Readonly<{
     queue(message: QualificationConfirmationRequestMessage): Promise<Readonly<{
@@ -79,43 +101,6 @@ function requireReference(value: string, path: string): void {
   if (value.trim().length === 0) throw new TypeError(`${path} must not be empty`)
 }
 
-const BASE58BTC_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-function decodeBase58btc(value: string): Uint8Array {
-  let decoded = 0n
-  for (const character of value) {
-    const index = BASE58BTC_ALPHABET.indexOf(character)
-    if (index < 0) throw new TypeError('Invalid base58btc character')
-    decoded = decoded * 58n + BigInt(index)
-  }
-  const bytes: number[] = []
-  while (decoded > 0n) {
-    bytes.unshift(Number(decoded & 0xffn))
-    decoded >>= 8n
-  }
-  for (const character of value) {
-    if (character !== '1') break
-    bytes.unshift(0)
-  }
-  return Uint8Array.from(bytes)
-}
-
-function assertRawSha3_384CidV1(contentId: string): void {
-  if (!/^z[1-9A-HJ-NP-Za-km-z]+$/u.test(contentId)) {
-    throw new TypeError('evidence.contentId must be a base58btc multibase CID')
-  }
-  const bytes = decodeBase58btc(contentId.slice(1))
-  if (
-    bytes.length !== 52
-    || bytes[0] !== 0x01
-    || bytes[1] !== 0x55
-    || bytes[2] !== 0x15
-    || bytes[3] !== 0x30
-  ) {
-    throw new TypeError('evidence.contentId must be CIDv1 raw with a SHA3-384 multihash')
-  }
-}
-
 function validateRequest(request: QualificationEvidenceRequest): void {
   requireReference(request.trustedContext.controllerAuthorizationReference, 'controllerAuthorizationReference')
   requireReference(request.trustedContext.employerTenantReference, 'employerTenantReference')
@@ -126,7 +111,7 @@ function validateRequest(request: QualificationEvidenceRequest): void {
   requireReference(request.claimedIssuer.legalIdentifier, 'claimedIssuer.legalIdentifier')
   requireReference(request.claimedIssuer.jurisdiction, 'claimedIssuer.jurisdiction')
   requireReference(request.evidence.reference, 'evidence.reference')
-  assertRawSha3_384CidV1(request.evidence.contentId)
+  assertSha3_384EvidenceContentId(request.evidence.contentId)
 }
 
 export function createQualificationEvidenceController(
@@ -135,17 +120,36 @@ export function createQualificationEvidenceController(
   return {
     async submit(request: QualificationEvidenceRequest) {
       validateRequest(request)
-      const issuer = await ports.issuerDirectory.resolve(request.claimedIssuer)
-      if (!issuer) {
+      const resolution = await ports.issuerDirectory.resolve(request.claimedIssuer)
+      if (resolution.kind === 'not-resolved') {
         return Object.freeze({ phase: 'issuer-not-resolved' as const })
       }
 
       const recorded = await ports.evidenceRecorder.recordEmployerAttestation(request)
+      if (resolution.kind === 'identity-resolved') {
+        await ports.ledger.recordAnchor({
+          anchorReference: recorded.anchor.anchorReference,
+          evidenceReference: recorded.evidenceReference,
+          contentHash: recorded.anchor.contentHash,
+          issuerOrganizationReference: resolution.issuerOrganizationReference,
+          lifecycleStatus: 'awaiting-issuer-onboarding',
+        })
+        return Object.freeze({
+          phase: 'awaiting-issuer-onboarding' as const,
+          evidenceReference: recorded.evidenceReference,
+          employerProofReference: recorded.employerProofReference,
+          ledgerAnchorReference: recorded.anchor.anchorReference,
+          issuerOrganizationReference: resolution.issuerOrganizationReference,
+        })
+      }
+
+      const issuer = resolution.issuer
       await ports.ledger.recordAnchor({
         anchorReference: recorded.anchor.anchorReference,
         evidenceReference: recorded.evidenceReference,
         contentHash: recorded.anchor.contentHash,
         issuerTenantReference: issuer.issuerTenantReference,
+        issuerOrganizationReference: issuer.issuerOrganizationReference,
         lifecycleStatus: 'awaiting-issuer-confirmation',
       })
 
