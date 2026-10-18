@@ -80,11 +80,11 @@ boundaries.
 
 Antifraud documents are Schema.org `DigitalDocument` resources with concrete
 `MediaObject` encodings. They are never FHIR `DocumentReference` resources.
-Runtime-neutral delivery orchestration will consume the canonical data-utils
-contract and carry PDF, spreadsheet, Word, image, video or other governed bytes
-through DIDComm `attachments[]`, inline or by protected reference. Delivery,
-read, acceptance and signature remain distinct states. Implementation is
-tracked in [GitHub issue #5](https://github.com/antifraudservices/antifraud-sdk-core-ts/issues/5).
+`createDocumentDeliveryController` consumes the canonical data-utils contract
+and carries governed bytes through DIDComm `attachments[]`, inline or by
+protected reference. Trusted sender, recipient and service bindings remain
+server-owned; replay is operation-idempotent; receipt storage contains no raw
+bytes. Delivery, read and signature remain distinct states.
 
 ## Dependency direction
 
