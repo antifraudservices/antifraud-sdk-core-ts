@@ -89,6 +89,13 @@ The ledger is a status and audit boundary, not a mailbox or document store.
 The primary path is tenant-to-tenant messaging because it supports delivery
 receipts, retries, authentication, policy and protected attachment access.
 
+Antifraud never turns this attachment into FHIR `DocumentReference`. Its
+business representation is Schema.org `DigitalDocument` plus `MediaObject`.
+The binary travels in DIDComm `attachments[]` as bounded base64url bytes or an
+authorized link plus multihash. The canonical minimal-PDF contract is
+[antifraud-data-utils-ts issue #2](https://github.com/antifraudservices/antifraud-data-utils-ts/issues/2),
+and SDK orchestration is [issue #5](https://github.com/antifraudservices/antifraud-sdk-core-ts/issues/5).
+
 An authorized ledger adapter may register a privacy-minimized evidence anchor
 and later append the issuer-owned confirmation, rejection or revocation
 status. Ledger events or addressed queries may be used to recover from a lost

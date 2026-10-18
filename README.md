@@ -76,6 +76,16 @@ fails before evidence recording. See [Qualification evidence confirmation protot
 for attachment, issuer notification, ledger recovery and credential-rendering
 boundaries.
 
+## Schema.org document delivery
+
+Antifraud documents are Schema.org `DigitalDocument` resources with concrete
+`MediaObject` encodings. They are never FHIR `DocumentReference` resources.
+Runtime-neutral delivery orchestration will consume the canonical data-utils
+contract and carry PDF, spreadsheet, Word, image, video or other governed bytes
+through DIDComm `attachments[]`, inline or by protected reference. Delivery,
+read, acceptance and signature remain distinct states. Implementation is
+tracked in [GitHub issue #5](https://github.com/antifraudservices/antifraud-sdk-core-ts/issues/5).
+
 ## Dependency direction
 
 ```text
