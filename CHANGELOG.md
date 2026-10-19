@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.5 - 2026-10-19
+
+- Consume `antifraud-data-utils-ts@0.1.9` so runtime-neutral orchestration and
+  its Node consumers share the canonical versioned qualification
+  classification reference used by the issuer-review journey.
+
 ## 0.1.4 - 2026-10-18
 
 - Consume the current exact `antifraud-data-utils-ts` release and add the runtime-neutral managed
