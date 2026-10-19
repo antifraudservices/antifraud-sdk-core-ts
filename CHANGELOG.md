@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Consume `antifraud-data-utils-ts@0.1.7` and add the runtime-neutral managed
+## 0.1.4 - 2026-10-18
+
+- Consume the current exact `antifraud-data-utils-ts` release and add the runtime-neutral managed
   signing-session controller.
 - Bind each short-lived session to the authenticated user, registered device,
   operation, immutable manifest, relying party and purpose.
