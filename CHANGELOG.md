@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Consume `antifraud-data-utils-ts@0.1.7` and add the runtime-neutral managed
+  signing-session controller.
+- Bind each short-lived session to the authenticated user, registered device,
+  operation, immutable manifest, relying party and purpose.
+- Require biometric presence when available, allow governed PIN or password
+  fallback otherwise, and fail closed on expiry, cancellation, lock, context
+  change or replay.
+- Keep login, review, delivery and read events explicitly separate from a
+  managed-wallet signature.
+
 ## 0.1.3 - 2026-10-18
 
 - Consume `antifraud-data-utils-ts@0.1.4` and orchestrate Schema.org
