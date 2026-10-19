@@ -38,6 +38,15 @@ No secrets, tenant configuration, trust anchors, personal data, signing keys, or
 
 The browser and a generic backend for frontend are untrusted for credential signing. Only the configured credential provider may sign after an authoritative readback and authorization check.
 
+For managed user signatures, `ManagedSigningSessionController` binds one
+short-lived session to the authenticated user, registered device, operation,
+immutable manifest, relying party and purpose. It requires local biometric
+presence when the device supports it, with PIN or password fallback only when
+biometrics are unavailable. Cancellation, device lock, expiry, replay or any
+context mismatch invalidates the ceremony. The controller receives only a
+wallet port and returns a proof; private key material remains in the managed
+wallet. Login, review, delivery and read events never count as signatures.
+
 ## Workforce group authorization
 
 An employee does not receive a separate Consent merely by joining an

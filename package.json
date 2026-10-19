@@ -34,6 +34,6 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "antifraud-data-utils-ts": "0.1.4"
+    "antifraud-data-utils-ts": "0.1.7"
   }
 }
