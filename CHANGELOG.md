@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Build OpenID4VP queries for configured SD-JWT VC types and selected claims
+  with explicit cryptographic holder binding.
+
 ## 0.1.5 - 2026-10-19
 
 - Consume `antifraud-data-utils-ts@0.1.9` so runtime-neutral orchestration and

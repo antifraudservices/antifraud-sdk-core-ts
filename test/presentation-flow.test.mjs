@@ -3,7 +3,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  EUDI_PID,
+  OPENID4VP_FORMAT,
   OPENID4VP_PROFILES,
+  buildSdJwtVcCredentialQuery,
   buildDcqlQuery,
   buildHaipAuthorizationUri,
   createPresentationController,
@@ -20,6 +23,24 @@ test('builds a minimal EUDI PID query without retention', () => {
       if (credential.format === 'mso_mdoc') assert.equal(claim.intent_to_retain, false)
     }
   }
+})
+
+test('builds a holder-bound request for a configured SD-JWT VC type and claim paths', () => {
+  const [, pidQuery] = buildDcqlQuery(OPENID4VP_PROFILES.eudiPid).credentials
+  const claimPaths = [[EUDI_PID.givenName], [EUDI_PID.familyName]]
+  const request = buildSdJwtVcCredentialQuery({
+    id: pidQuery.id,
+    credentialType: EUDI_PID.sdJwtVcType,
+    claimPaths,
+  })
+
+  assert.deepEqual(request, {
+    id: pidQuery.id,
+    format: OPENID4VP_FORMAT.sdJwtVc,
+    meta: { vct_values: [EUDI_PID.sdJwtVcType] },
+    claims: claimPaths.map((path) => ({ path })),
+    require_cryptographic_holder_binding: true,
+  })
 })
 
 test('stores only opaque presentation continuity and rejects additional fields', async () => {

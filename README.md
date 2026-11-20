@@ -23,6 +23,14 @@ The intended flow is:
 
 OpenID for Verifiable Presentations starts and verifies a wallet presentation. Credential issuance is a separate provider operation and may use OpenID for Verifiable Credential Issuance or another explicit issuer protocol. The two operations must never be described as one.
 
+For a sector attestation, the verifier can use
+`buildSdJwtVcCredentialQuery({ id, credentialType, claimPaths })` to add an
+SD-JWT VC entry to its DCQL request. The verifier selects the credential type
+and claims from its configured attestation profile. The query requires
+cryptographic proof of holder binding. The verifier still validates the
+presentation and the issuer's authority for the requested attestation.
+
+
 ## Planned public API
 
 - verification and attestation use-case ports;
