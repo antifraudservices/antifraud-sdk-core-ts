@@ -50,6 +50,7 @@ export interface DcqlCredential {
   format: (typeof OPENID4VP_FORMAT)[keyof typeof OPENID4VP_FORMAT]
   meta: { doctype_value: string } | { vct_values: readonly string[] }
   claims: readonly DcqlClaim[]
+  require_cryptographic_holder_binding?: true
 }
 
 export interface DcqlQuery {
@@ -59,6 +60,20 @@ export interface DcqlQuery {
 
 function mdocClaim(namespace: string, claim: string): DcqlClaim {
   return { path: [namespace, claim], intent_to_retain: false }
+}
+
+export function buildSdJwtVcCredentialQuery(input: {
+  id: string
+  credentialType: string
+  claimPaths: readonly (readonly string[])[]
+}): DcqlCredential {
+  return {
+    id: input.id,
+    format: OPENID4VP_FORMAT.sdJwtVc,
+    meta: { vct_values: [input.credentialType] },
+    claims: input.claimPaths.map((path) => ({ path })),
+    require_cryptographic_holder_binding: true,
+  }
 }
 
 export function buildDcqlQuery(profile: OpenId4VpProfile): DcqlQuery {
@@ -75,16 +90,11 @@ export function buildDcqlQuery(profile: OpenId4VpProfile): DcqlQuery {
             mdocClaim(EUDI_PID.mdocType, EUDI_PID.birthDate),
           ],
         },
-        {
+        buildSdJwtVcCredentialQuery({
           id: 'pid_sd_jwt',
-          format: OPENID4VP_FORMAT.sdJwtVc,
-          meta: { vct_values: [EUDI_PID.sdJwtVcType] },
-          claims: [
-            { path: [EUDI_PID.givenName] },
-            { path: [EUDI_PID.familyName] },
-            { path: [EUDI_PID.birthDate] },
-          ],
-        },
+          credentialType: EUDI_PID.sdJwtVcType,
+          claimPaths: [[EUDI_PID.givenName], [EUDI_PID.familyName], [EUDI_PID.birthDate]],
+        }),
       ],
       credential_sets: [{ options: [['pid_mdoc'], ['pid_sd_jwt']] }],
     }
