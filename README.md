@@ -122,3 +122,13 @@ Implementation begins with executable contract tests and proceeds in dependency 
 ## License
 
 Apache-2.0.
+
+## OpenID4VCI credential offer references
+
+`buildOpenId4VciOfferReference` creates the wallet launch URI after the
+issuer returns an HTTPS offer URL. `readOpenId4VciOfferReference` validates
+the same URI against the configured trusted offer origin. Both operations
+share the web and native contract and leave offer fetching, OAuth and key
+custody to the runtime adapters.
+
+[OpenID for Verifiable Credential Issuance](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-final.html)
