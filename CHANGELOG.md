@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-11-22
+
 - Build and validate by-reference OpenID4VCI offer launch URIs against a trusted HTTPS origin.
 
 - Build OpenID4VP queries for configured SD-JWT VC types and selected claims
