@@ -1,3 +1,4 @@
+export * from './openid4vci.js'
 export * from './openid4vp.js'
 export * from './credential-issuance-controller.js'
 export * from './document-delivery-controller.js'

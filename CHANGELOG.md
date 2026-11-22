@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Build and validate by-reference OpenID4VCI offer launch URIs against a trusted HTTPS origin.
+
 - Build OpenID4VP queries for configured SD-JWT VC types and selected claims
   with explicit cryptographic holder binding.
 
